@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phishing Email Classifier</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            margin: 50px; 
+        }
+        input { 
+            padding: 10px; 
+            font-size: 16px; 
+            width: 100px; 
+            margin: 5px; 
+        }
+        button { 
+            padding: 10px 15px; 
+            font-size: 16px; 
+            margin-top: 10px; 
+            cursor: pointer; 
+        }
+        p { 
+            font-size: 18px; 
+            font-weight: bold; 
+        }
+        .info-box {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            text-align: left;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .info-box h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .info-box ul {
+            text-align: left;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Phishing Email Classifier</h2>
+
+    <div class="info-box">
+        <h3>🔎 How This Works:</h3>
+        <p>Enter values for the email factor below to check if an email is suspicious.</p>
+        <h4>Allowed Inputs:</h4>
+        <ul>
+            <li><b>0</b> → Factor is NOT present.</li>
+            <li><b>0.5</b> → Factor is partially present.</li>
+            <li><b>1</b> → Factor is strongly present.</li>
+        </ul>
+        <p>The system will analyze these inputs and classify the email as <b>No Risk, Low Risk, Moderate Risk, High Risk, or Critical Risk</b>.</p>
+    </div>
+
+    <p>Enter email feature values:</p>
+    <label>🔹 Domain Reputation:</label> 
+    <input type="number" id="domain" step="0.5" min="0" max="1"><br>
+
+    <label>🔹 URL Analysis:</label> 
+    <input type="number" id="url" step="0.5" min="0" max="1"><br>
+
+    <label>🔹 Sensitive Info Requests:</label> 
+    <input type="number" id="sensitive_info" step="0.5" min="0" max="1"><br>
+
+    <label>🔹 Suspicious Keywords:</label> 
+    <input type="number" id="suspicious_words" step="0.5" min="0" max="1"><br>
+
+    <button onclick="predict()">🔍 Classify</button>
+    <p id="result"></p>
+    <p id="result-info"></p>
+
+    <script>
+        function isValidInput(value) {
+            return value == 0 || value == 0.5 || value == 1;
+        }
+
+        async function predict() {
+            let domain = parseFloat(document.getElementById("domain").value);
+            let url = parseFloat(document.getElementById("url").value);
+            let sensitive_info = parseFloat(document.getElementById("sensitive_info").value);
+            let suspicious_words = parseFloat(document.getElementById("suspicious_words").value);
+
+            // Check if all inputs are valid
+            if (![domain, url, sensitive_info, suspicious_words].every(isValidInput)) {
+                document.getElementById("result").innerText = "⚠️ Invalid input! Use only 0, 0.5, or 1.";
+                return;
+            }
+
+            try {
+                let response = await fetch("http://127.0.0.1:5000/predict", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        domain: domain,
+                        url: url,
+                        sensitive_info: sensitive_info,
+                        suspicious_words: suspicious_words
+                    })
+                });
+
+                let data = await response.json();
+                document.getElementById("result").innerText = `🔎 Classification: ${data.classification}`;
+
+                let classificationInfo = {
+                    "No": "✅ This email is safe and does not show phishing characteristics.",
+                    "Low": "⚠️ This email has minor phishing indicators. Proceed with caution.",
+                    "Moderate": "⚠️ This email shows some phishing signs. Verify sender and links before interacting.",
+                    "High": "🚨 Strong phishing indicators detected! Do not click on any links or provide sensitive information.",
+                    "Critical": "🚨⚠️ Highly suspicious email! Most likely a phishing attempt. Delete immediately."
+                };
+
+                document.getElementById("result-info").innerText = classificationInfo[data.classification] || "❓ Classification not recognized.";
+            } catch (error) {
+                document.getElementById("result").innerText = `❌ Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
