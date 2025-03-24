@@ -55,4 +55,4 @@ if st.button("🔍 Classify Email"):
 
 # Footer
 st.markdown("---")
-st.markdown("🚀 **Developed by Shravya Caroline Pallat, Priyanshu Singh and Ananya Prabhat** | Powered by Streamlit & Machine Learning")
+st.markdown("🚀 **Developed by Shravya Caroline Pallat, Priyanshu Singh and Ananya Prabhat** | Powered by Streamlit")
